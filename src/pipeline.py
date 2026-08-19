@@ -1,5 +1,4 @@
-
-
+import pandas as pd
 from ingestion.ingest import ingest
 from transform.silver import quality, clean_and_save, merge
 
@@ -26,7 +25,13 @@ class Pipeline:
             channels=self.dataframes["channels"],
             stock=self.dataframes["stock"])
         return self.transaktion_data
-
+    
+    def save_transaktion_data(self,df: pd.DataFrame) -> None:
+        from pathlib import Path
+        GOLD_DIR = Path(__file__).resolve().parents[2] / "data_lake" / "gold"
+        GOLD_DIR.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(GOLD_DIR / "transaktion_data.parquet", index=False)
+    
 
 
 if __name__ == "__main__":
@@ -36,4 +41,4 @@ if __name__ == "__main__":
     pipeline.quality_check()
     pipeline.clean_and_save()
     df = pipeline.merge_dataframes()
-    
+    pipeline.save_transaktion_data(df)
