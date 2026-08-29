@@ -219,3 +219,6 @@ __marimo__/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+#Data Lakehouse
+data_lake/
