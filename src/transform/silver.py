@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import pandas as pd
+from ingestion.ingest import TABLES
 
 
 SILVER_DIR = Path(__file__).resolve().parents[2] / "data_lake" / "silver"
@@ -23,6 +24,13 @@ def clean_and_save(dict_of_dfs: dict[str, pd.DataFrame]) -> None:
         if name == "salesitems":
             df['discount_percent'] = df['discount_percent'].str.rstrip('%').astype(float)
         df.to_parquet(SILVER_DIR / f"{name}.parquet", index=False)
+        
+def load_silver() -> dict[str, pd.DataFrame]:
+    """Lädt alle 7 Silver-Tabellen aus data_lake/silver/."""
+    return {
+        name: pd.read_parquet(SILVER_DIR / f"{name}.parquet")
+        for name in TABLES
+    }
 
 def merge(
     sales: pd.DataFrame,

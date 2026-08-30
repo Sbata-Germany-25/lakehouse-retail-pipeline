@@ -21,6 +21,14 @@ def save_bronze(df: pd.DataFrame, name: str) -> None:
     """Speichert ein DataFrame als Parquet-Datei in data_lake/bronze/."""
     df.to_parquet(BRONZE_DIR / f"{name}.parquet", index=False)
     
+    
+def load_bronze()  -> dict[str, pd.DataFrame]:
+    """Lädt alle 7 Rohtabellen aus data_lake/bronze/."""
+    return {
+        name: pd.read_parquet(BRONZE_DIR / f"{name}.parquet")
+        for name in TABLES
+    }
+    
 def ingest() -> dict[str, pd.DataFrame]:
     """Lädt alle 7 Rohtabellen und schreibt sie unverändert nach data_lake/bronze/."""
     BRONZE_DIR.mkdir(parents=True, exist_ok=True)
