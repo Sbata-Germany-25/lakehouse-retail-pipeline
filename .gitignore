@@ -222,3 +222,6 @@ __pycache__/
 
 #Data Lakehouse
 data_lake/
+
+# Airflow
+logs/
