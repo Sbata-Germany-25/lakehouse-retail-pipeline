@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+#Data Lakehouse
+data_lake/
+
+# Airflow
+logs/
