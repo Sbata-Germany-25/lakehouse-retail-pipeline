@@ -138,3 +138,6 @@ bq load \
 ##### Danach zur Kontrolle:
 
 bq query --use_legacy_sql=false 'SELECT * FROM `lakehouse-retail-pipeline.retail_lakehouse.campaigns`'
+### Hier liegen alle wichtige Info 
+ls -la ~/.gcp-keys/
+

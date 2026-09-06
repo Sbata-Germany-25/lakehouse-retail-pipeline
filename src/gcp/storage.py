@@ -18,3 +18,4 @@ class GCPStorage:
         #blob" ist GCS' Begriff für eine einzelne Datei/Objekt;
         blob = self.bucket.blob(blob_name)
         blob.upload_from_filename(str(local_path))
+        
