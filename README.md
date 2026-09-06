@@ -86,3 +86,55 @@ curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.10.4/docker-compose.
 ##### python -m venv .venv
 ##### source .venv/bin/activate
 ##### pip install -r requirements.txt
+
+
+### API aktivieren for storage in Google Cloud
+gcloud services enable storage.googleapis.com --project=lakehouse-retail-pipeline
+
+#Aktivierung verifizieren
+
+gcloud services list --enabled --project=lakehouse-retail-pipeline 2>&1 | grep -i storage
+
+oder
+
+gcloud services list --enabled
+
+
+#### Ressourcen krieren nach der Aktivierung GCS-Bucket
+
+gcloud storage buckets create gs://lakehouse-retail-pipeline-raw-hh \
+  --location=europe-west3 \
+  --default-storage-class=STANDARD
+
+### Verifizieren
+gcloud storage buckets list 
+
+#### CSVs hochladen in gcloud storage bucket
+gcloud storage cp Data/*.csv gs://lakehouse-retail-pipeline-raw-hh/raw/
+
+
+#### Verifizieren 
+gcloud storage ls gs://lakehouse-retail-pipeline-raw-hh/raw/
+
+
+### BigQuery API aktivieren
+gcloud services enable bigquery.googleapis.com --project=lakehouse-retail-pipeline
+
+### Ein Dataset anlegen
+bq mk --dataset --location=europe-west3 lakehouse-retail-pipeline:retail_lakehouse
+
+In BigQuery ist ein Dataset die oberste Organisationsebene innerhalb eines Projekts — vergleichbar mit einem Schema in klassischem SQL oder einer Datenbank in Databricks/Unity Catalog. Tabellen liegen immer innerhalb eines Datasets, nie direkt im Projekt.
+
+bq mk --dataset --location=europe-west3 lakehouse-retail-pipeline:retail_lakehouse
+
+#### Tabellen hochladen in BigQuery
+bq load \
+  --source_format=CSV \
+  --autodetect \
+  --skip_leading_rows=1 \
+  lakehouse-retail-pipeline:retail_lakehouse.campaigns \
+  gs://lakehouse-retail-pipeline-raw-hh/raw/dataset_fashion_store_campaigns.csv
+
+##### Danach zur Kontrolle:
+
+bq query --use_legacy_sql=false 'SELECT * FROM `lakehouse-retail-pipeline.retail_lakehouse.campaigns`'

@@ -3,7 +3,6 @@ import pandas as pd
 
 
 
-
 RAW_DIR = Path(__file__).resolve().parents[2] / "Data"
 BRONZE_DIR = Path(__file__).resolve().parents[2] / "data_lake" / "bronze"
 
@@ -20,6 +19,9 @@ def load_csv(name: str, parse_dates: list[str] | None = None) -> pd.DataFrame:
 def save_bronze(df: pd.DataFrame, name: str) -> None:
     """Speichert ein DataFrame als Parquet-Datei in data_lake/bronze/."""
     df.to_parquet(BRONZE_DIR / f"{name}.parquet", index=False)
+    
+    
+    
     
     
 def load_bronze()  -> dict[str, pd.DataFrame]:

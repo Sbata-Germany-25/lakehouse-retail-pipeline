@@ -10,4 +10,7 @@ jupyter>=1.0
 ipykernel>=6.29
 pyarrow>=15.0
 pytest>=8.0
+google-cloud-storage
+google-cloud-bigquery
+
 

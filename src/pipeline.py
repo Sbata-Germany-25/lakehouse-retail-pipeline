@@ -31,6 +31,7 @@ class Pipeline:
         GOLD_DIR = Path(__file__).resolve().parents[1] / "data_lake" / "gold"
         GOLD_DIR.mkdir(parents=True, exist_ok=True)
         df.to_parquet(GOLD_DIR / "transaktion_data.parquet", index=False)
+        
                  
 
 if __name__ == "__main__":
