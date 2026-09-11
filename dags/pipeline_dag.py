@@ -40,10 +40,29 @@ def retail_lakehouse_pipeline():
             channels=dataframes["channels"],
             stock=dataframes["stock"])
         Pipeline().save_transaktion_data(transaktion_data)
+        
+    @task
+    def gcp_sync_task():
+        from gcp.storage import GCPStorage
+        from gcp.bigquery import GCPBigQuery
+        from pathlib import Path
+
+        gold_path = Path("/opt/airflow/project/data_lake/gold/transaktion_data.parquet")
+        storage = GCPStorage("lakehouse-retail-pipeline-raw-hh")
+        storage.upload_to_gcs(gold_path, "gold/transaktion_data.parquet")
+
+        bq = GCPBigQuery("lakehouse-retail-pipeline", "retail_lakehouse")
+        bq.load_to_bigquery(
+            "gs://lakehouse-retail-pipeline-raw-hh/gold/transaktion_data.parquet",
+            "transaktion_data"
+        )
+
 
         
 
-    ingest_task() >> quality_task() >> clean_and_save_task() >> merge_and_save_task()
+    ingest_task() >> quality_task() >> clean_and_save_task() >> merge_and_save_task() >> gcp_sync_task()
 
 
 retail_lakehouse_pipeline()
+
+

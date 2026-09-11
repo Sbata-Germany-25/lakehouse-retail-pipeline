@@ -57,6 +57,7 @@ x-airflow-common:
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__FERNET_KEY: ''
     PYTHONPATH: /opt/airflow/project/src
+    GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/gcp-key.json
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
@@ -79,6 +80,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/src:/opt/airflow/project/src
     - ${AIRFLOW_PROJ_DIR:-.}/Data:/opt/airflow/project/Data
     - ${AIRFLOW_PROJ_DIR:-.}/data_lake:/opt/airflow/project/data_lake
+    - ${GCP_KEY_PATH}:/opt/airflow/gcp-key.json:ro
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-1000}"
   depends_on:
     &airflow-common-depends-on
