@@ -1,6 +1,6 @@
 # Architektur — Lakehouse Retail Pipeline
 
-Dieses Dokument beschreibt, welche Tools im Projekt zusammenspielen, welche Rolle jedes davon hat, und wie sie miteinander kommunizieren. Stand: lokales Setup mit Airflow in Docker (GCP-Teil ist geplant, siehe Abschnitt 4).
+Dieses Dokument beschreibt, welche Tools im Projekt zusammenspielen, welche Rolle jedes davon hat, und wie sie miteinander kommunizieren. Stand: lokales Airflow (Docker) orchestriert Bronze/Silver/Gold **und** synct Gold-Daten automatisiert nach GCS + BigQuery. Cloud Composer/CD sind noch geplant, siehe Abschnitt 4.
 
 ## 1. Überblick
 
@@ -15,17 +15,24 @@ flowchart TD
 
     SILVER -->|"4 · load_silver() + merge()"| GOLD[("Gold<br/>data_lake/gold/transaktion_data.parquet")]
 
-    subgraph DOCKER["Docker-Container (eigenes Image: apache/airflow + pandas/pyarrow)"]
+    GOLD -->|"5 · gcp_sync_task():<br/>upload_to_gcs()"| GCS[("GCS-Bucket<br/>lakehouse-retail-pipeline-raw-hh")]
+    GCS -->|"load_to_bigquery()"| BQ[("BigQuery<br/>retail_lakehouse.transaktion_data")]
+
+    subgraph DOCKER["Docker-Container (eigenes Image: apache/airflow + pandas/pyarrow + google-cloud-*)"]
         SCHED["Scheduler<br/>(führt Tasks aus, LocalExecutor)"]
         WEB["Webserver<br/>(UI, Port 8080)"]
         TRIG["Triggerer"]
     end
+
+    SA[("Service Account<br/>pipeline-runner<br/>(Key read-only gemountet)")] -.->|"authentifiziert"| GCS
+    SA -.-> BQ
 
     SCHED -->|"liest & startet Tasks aus"| DAGFILE["dags/pipeline_dag.py"]
     DAGFILE -.->|orchestriert Reihenfolge| CSV
     DAGFILE -.-> BRONZE
     DAGFILE -.-> SILVER
     DAGFILE -.-> GOLD
+    DAGFILE -.-> GCS
 
     SCHED <-->|"Task-Status, Run-Historie"| METADB[("Postgres<br/>NUR Airflow-Metadaten,<br/>keine Fachdaten!")]
     WEB <-->|"zeigt Status an"| METADB
@@ -44,7 +51,7 @@ flowchart TD
 | **pandas** (in `src/ingestion/`, `src/transform/`) | Führt die eigentliche Transformationslogik aus (Lesen, Bereinigen, Mergen, Schreiben) | liest/schreibt Parquet-Dateien in `data_lake/` |
 | **PyArrow** | Bibliothek, die pandas zum Lesen/Schreiben von Parquet nutzt | wird von pandas intern aufgerufen |
 | **`data_lake/{bronze,silver,gold}/`** | Der eigentliche "Lakehouse"-Speicher — reine Parquet-Dateien auf der Festplatte, kein Datenbank-Server | wird von Airflow-Tasks gelesen/geschrieben (per Docker-Volume in den Container gemountet) |
-| **Apache Airflow (Scheduler)** | Orchestriert die Reihenfolge der 4 Tasks (`ingest → quality → clean_and_save → merge_and_save`), startet sie, überwacht Erfolg/Fehler | liest `dags/pipeline_dag.py`, schreibt Status in Postgres |
+| **Apache Airflow (Scheduler)** | Orchestriert die Reihenfolge der 5 Tasks (`ingest → quality → clean_and_save → merge_and_save → gcp_sync`), startet sie, überwacht Erfolg/Fehler | liest `dags/pipeline_dag.py`, schreibt Status in Postgres |
 | **Apache Airflow (Webserver)** | Web-UI zum Anschauen/manuellen Triggern von DAG-Runs | liest Status aus Postgres |
 | **Apache Airflow (Triggerer)** | Verwaltet asynchrone/"deferred" Tasks (bei dieser einfachen DAG aktuell nicht aktiv genutzt, aber Teil des Standard-Setups) | Postgres |
 | **Postgres** | **Nur** Airflows eigene Betriebsdatenbank — speichert DAG-Run-Historie, Task-Status, Verbindungen. **Enthält keine Fachdaten** (keine Sales/Customers etc.) — das ist ein häufiger Verwechslungspunkt! | Scheduler, Webserver, Triggerer |
@@ -54,17 +61,25 @@ flowchart TD
 | **Pytest** | Prüft die Transform-Logik (`quality`, `clean_and_save`, `merge`) automatisiert, ohne echte Daten/Airflow zu brauchen | läuft gegen `src/`, lokal und in GitHub Actions |
 | **GitHub Repo** | Zentrale Quelle der Wahrheit für den Code, Historie via Commits/Branches | Entwickler pusht hierhin, GitHub Actions reagiert darauf |
 | **GitHub Actions (CI)** | Führt bei jedem Push/PR automatisch `pytest` in einer frischen Cloud-VM aus — verhindert, dass kaputter Code nach `main` gelangt | checkt Code aus GitHub aus, installiert `requirements.txt`, ruft `pytest` auf |
+| **GCS-Bucket** (`lakehouse-retail-pipeline-raw-hh`) | Objektspeicher in der Cloud — nimmt Rohdaten (`raw/`) und Gold-Daten (`gold/`) als Parquet/CSV entgegen | wird von `GCPStorage.upload_to_gcs()` beschrieben, von BigQuery als Quelle gelesen |
+| **BigQuery** (Dataset `retail_lakehouse`) | SQL-basiertes Data Warehouse, GCP-Pendant zu Databricks/Delta Lake — Zielort für `transaktion_data` als abfragbare Tabelle | wird von `GCPBigQuery.load_to_bigquery()` per Load-Job aus GCS befüllt |
+| **Service Account `pipeline-runner`** | Technische, nicht-persönliche GCP-Identität mit den Rollen `storage.objectAdmin`, `bigquery.dataEditor`, `bigquery.jobUser` — authentifiziert Container-Code bei GCP, ganz ohne Browser-Login | Key liegt außerhalb des Repos (`~/.gcp-keys/`), read-only in den Airflow-Container gemountet |
 
-## 3. Der Datenfluss im Detail (die 4 Airflow-Tasks)
+## 3. Der Datenfluss im Detail (die 5 Airflow-Tasks)
 
 1. **`ingest_task`** — liest die 7 CSVs aus `Data/`, schreibt sie unverändert als Parquet nach `data_lake/bronze/`
 2. **`quality_task`** — liest Bronze erneut ein (`load_bronze()`), prüft auf Nullwerte, bricht bei Problemen mit `ValueError` ab
 3. **`clean_and_save_task`** — liest Bronze erneut ein, bereinigt `discount_percent` (String → Float), schreibt nach `data_lake/silver/`
 4. **`merge_and_save_task`** — liest Silver ein (`load_silver()`), führt alle Tabellen zu `transaktion_data` zusammen (Item-Ebene), speichert als Gold in `data_lake/gold/`
+5. **`gcp_sync_task`** — lädt die Gold-Parquet-Datei nach GCS hoch, dann von GCS per Load-Job nach BigQuery (Tabelle `retail_lakehouse.transaktion_data`)
 
 **Wichtig zum Verständnis:** Jede Task liest ihre Eingabedaten selbst neu von der Festplatte — es werden **keine DataFrames zwischen Tasks über Airflow selbst transportiert** (kein XCom für große Daten). Das ist bewusst so gebaut, weil Airflow-Tasks isolierte Prozesse sind und XCom nur für kleine Metadaten gedacht ist, nicht für komplette pandas-DataFrames.
 
-## 4. Geplante Erweiterung: GCP (noch nicht gebaut)
+## 4. Erledigt vs. noch geplant
+
+**Bereits gebaut** (siehe Diagramm oben): GCS-Bucket, BigQuery-Dataset, Service-Account-Auth, `gcp_sync_task` in der DAG — die Gold-Daten landen bei jedem DAG-Run automatisch auch in BigQuery.
+
+**Noch offen:**
 
 ```mermaid
 flowchart LR
@@ -73,13 +88,10 @@ flowchart LR
     COMPOSER -->|"liest DAGs aus"| GCS_DAGS[("GCS-Bucket<br/>gs://.../dags/")]
     GITHUB2[("GitHub Actions")] -.->|"CD: gcloud composer ... import"| GCS_DAGS
 
-    GOLD2["lokales Gold-Parquet"] -.->|"perspektivisch zusätzlich"| BQ[("BigQuery<br/>Data Warehouse")]
-    BQ -.-> DASH["Power BI / Streamlit<br/>Dashboard"]
+    BQ2[("BigQuery<br/>(bereits befüllt)")] -.-> DASH["Power BI / Streamlit<br/>Dashboard"]
 ```
 
-- **GCS (Cloud Storage)** — würde Rohdaten/Bronze aufnehmen, parallel oder statt der lokalen `data_lake/`
-- **BigQuery** — alternatives/zusätzliches Ziel für Silver/Gold, SQL-basiertes Data Warehouse statt lokaler Parquet-Dateien
-- **Cloud Composer** — GCP-gehostetes Airflow; würde das lokale Docker-Setup für eine "echte" Cloud-Umgebung ablösen
-- **CD via GitHub Actions** — nach erfolgreichem CI-Lauf automatisch die DAG-Datei in den Composer-GCS-Bucket kopieren (`gcloud composer environments storage dags import`)
-
-Dieser Teil ist bewusst noch nicht umgesetzt — Cloud Composer verursacht laufende Kosten (siehe Kostenabschnitt aus dem Chat), daher wird das eher kurz für eine Demo aufgesetzt als dauerhaft betrieben.
+- **Cloud Composer** — GCP-gehostetes Airflow; würde das lokale Docker-Setup für eine "echte" Cloud-Umgebung ablösen. Bewusst noch nicht umgesetzt — verursacht laufende Kosten (siehe Kostenabschnitt aus dem Chat), daher eher kurz für eine Demo geplant als dauerhaft betrieben
+- **CD via GitHub Actions** — nach erfolgreichem CI-Lauf automatisch die DAG-Datei in den Composer-GCS-Bucket kopieren (`gcloud composer environments storage dags import`) — ergibt erst Sinn, sobald Composer existiert
+- **Dashboard** (Power BI/Streamlit) — noch nicht begonnen; BigQuery ist als Datenquelle dafür aber bereits einsatzbereit
+- **`src/governance/`** — leerer Stub für Unity-Catalog-artige Governance, niedrigste Priorität

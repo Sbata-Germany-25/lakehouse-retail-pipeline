@@ -10,7 +10,7 @@ Bronze/Silver/Gold-Lakehouse-Muster:
 - **Silver** (`data_lake/silver/`) — bereinigte Einzeltabellen (z.B. `discount_percent` als float statt String)
 - **Gold** (`data_lake/gold/`) — `transaktion_data.parquet`, denormalisierte Tabelle auf Item-Ebene für Reporting
 
-Orchestriert über Apache Airflow (lokal, Docker, `LocalExecutor`). Geplant: GCP als paralleles Zielsystem (GCS + BigQuery), CI/CD via GitHub Actions, Dashboard (Power BI/Streamlit).
+Orchestriert über Apache Airflow (lokal, Docker, `LocalExecutor`) — inkl. eines Tasks, der Gold-Daten automatisch nach GCS + BigQuery synct. Details siehe [docs/architecture.md](docs/architecture.md). Geplant: Cloud Composer + CD, Dashboard (Power BI/Streamlit).
 
 ## Setup
 
@@ -46,20 +46,21 @@ Voraussetzung: `.env` mit `AIRFLOW_UID` (eigene User-ID, siehe `id -u`).
 src/
 ├── ingestion/    # CSV → Bronze
 ├── transform/    # Bronze → Silver, Merge zu Gold
-├── gcp/          # geplant: GCS/BigQuery-Integration
+├── gcp/          # GCS-Upload + BigQuery-Load (Service Account)
 └── governance/   # geplant: Unity-Catalog-artige Governance
 dags/             # Airflow-DAGs
 notebooks/        # explorative Analyse (EDA)
-tests/            # geplant: Pytest für Transform-Logik
+tests/            # Pytest für Transform-Logik
 ```
 
 ## Status
 
 - [x] Bronze/Silver/Gold-Pipeline (lokal, pandas)
 - [x] Airflow lokal via Docker (LocalExecutor)
-- [ ] Airflow-DAG für die Pipeline
-- [ ] Tests + CI/CD (GitHub Actions)
-- [ ] GCP-Integration (GCS, BigQuery)
+- [x] Airflow-DAG für die Pipeline (5 Tasks, inkl. GCP-Sync)
+- [x] Tests + CI/CD (GitHub Actions)
+- [x] GCP-Integration (GCS, BigQuery) — in die DAG eingebunden
+- [ ] Cloud Composer + CD (DAG-Deployment)
 - [ ] Dashboard (Power BI/Streamlit)
 
 ---
