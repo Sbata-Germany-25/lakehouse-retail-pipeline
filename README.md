@@ -77,8 +77,6 @@ flowchart TD
 | **Service Account `pipeline-runner`** | Technische, nicht-persönliche GCP-Identität mit den Rollen `storage.objectAdmin`, `bigquery.dataEditor`, `bigquery.jobUser` — authentifiziert Container-Code bei GCP, ganz ohne Browser-Login | Key liegt außerhalb des Repos (`~/.gcp-keys/`), read-only in den Airflow-Container gemountet |
 | **Apache Superset** | Open-Source-BI-Dashboard (Power-BI-Äquivalent), Reporting-Layer über den Gold-Daten in BigQuery | eigenständiges Docker-Setup in **separatem Ordner außerhalb dieses Repos** (`../Superset-Dashboard/`), verbindet sich per SQL/SQLAlchemy mit BigQuery |
 
-Der Task-für-Task-Ablauf im Detail steht in [docs/architecture.md](docs/architecture.md).
-
 ## Setup
 
 ```bash
