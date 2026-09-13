@@ -51,7 +51,10 @@ src/
 dags/             # Airflow-DAGs
 notebooks/        # explorative Analyse (EDA)
 tests/            # Pytest für Transform-Logik
+dashboards/       # (leer) Dashboard-Layer läuft separat, siehe unten
 ```
+
+Das Dashboard (Apache Superset) liegt bewusst **außerhalb** dieses Repos, in einem eigenen Ordner `Superset-Dashboard/` — es ist extern bezogener Tool-Code, kein eigener Projekt-Code (siehe [docs/architecture.md](docs/architecture.md)).
 
 ## Status
 
@@ -62,83 +65,3 @@ tests/            # Pytest für Transform-Logik
 - [x] GCP-Integration (GCS, BigQuery) — in die DAG eingebunden
 - [ ] Cloud Composer + CD (DAG-Deployment)
 - [ ] Dashboard (Power BI/Streamlit)
-
----
-
-## Notizen (temporär, zum Entfernen)
-
-```
-mkdir -p ./logs ./plugins ./config
-curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.10.4/docker-compose.yaml'
-```
-- genau richtig. mkdir -p ./logs ./plugins ./config erstellt drei Ordner im aktuellen Verzeichnis:
-
-- logs/
-- plugins/
-- config/
-
-- curl — lädt Inhalte von einer URL herunter
-- L — folgt Weiterleitungen (falls die URL umgeleitet wird, z.B. auf eine andere Version)
-- f — "fail silently": wenn der Server einen Fehler zurückgibt (z.B. 404, falsche Version), bricht curl ab statt eine Fehlerseite als Datei zu speichern
-- O — speichert die heruntergeladene Datei unter ihrem Original-Dateinamen aus der URL (hier: docker-compose.yaml), statt sie z.B. im Terminal auszugeben.
-
-##### neue Env instalieren
-##### cd dein-projekt-ordner
-##### python -m venv .venv
-##### source .venv/bin/activate
-##### pip install -r requirements.txt
-
-
-### API aktivieren for storage in Google Cloud
-gcloud services enable storage.googleapis.com --project=lakehouse-retail-pipeline
-
-#Aktivierung verifizieren
-
-gcloud services list --enabled --project=lakehouse-retail-pipeline 2>&1 | grep -i storage
-
-oder
-
-gcloud services list --enabled
-
-
-#### Ressourcen krieren nach der Aktivierung GCS-Bucket
-
-gcloud storage buckets create gs://lakehouse-retail-pipeline-raw-hh \
-  --location=europe-west3 \
-  --default-storage-class=STANDARD
-
-### Verifizieren
-gcloud storage buckets list 
-
-#### CSVs hochladen in gcloud storage bucket
-gcloud storage cp Data/*.csv gs://lakehouse-retail-pipeline-raw-hh/raw/
-
-
-#### Verifizieren 
-gcloud storage ls gs://lakehouse-retail-pipeline-raw-hh/raw/
-
-
-### BigQuery API aktivieren
-gcloud services enable bigquery.googleapis.com --project=lakehouse-retail-pipeline
-
-### Ein Dataset anlegen
-bq mk --dataset --location=europe-west3 lakehouse-retail-pipeline:retail_lakehouse
-
-In BigQuery ist ein Dataset die oberste Organisationsebene innerhalb eines Projekts — vergleichbar mit einem Schema in klassischem SQL oder einer Datenbank in Databricks/Unity Catalog. Tabellen liegen immer innerhalb eines Datasets, nie direkt im Projekt.
-
-bq mk --dataset --location=europe-west3 lakehouse-retail-pipeline:retail_lakehouse
-
-#### Tabellen hochladen in BigQuery
-bq load \
-  --source_format=CSV \
-  --autodetect \
-  --skip_leading_rows=1 \
-  lakehouse-retail-pipeline:retail_lakehouse.campaigns \
-  gs://lakehouse-retail-pipeline-raw-hh/raw/dataset_fashion_store_campaigns.csv
-
-##### Danach zur Kontrolle:
-
-bq query --use_legacy_sql=false 'SELECT * FROM `lakehouse-retail-pipeline.retail_lakehouse.campaigns`'
-### Hier liegen alle wichtige Info 
-ls -la ~/.gcp-keys/
-

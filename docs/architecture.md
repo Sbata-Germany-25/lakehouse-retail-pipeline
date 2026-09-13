@@ -17,6 +17,7 @@ flowchart TD
 
     GOLD -->|"5 · gcp_sync_task():<br/>upload_to_gcs()"| GCS[("GCS-Bucket<br/>lakehouse-retail-pipeline-raw-hh")]
     GCS -->|"load_to_bigquery()"| BQ[("BigQuery<br/>retail_lakehouse.transaktion_data")]
+    BQ -.->|"SQL-Verbindung (geplant)"| SUPERSET["Apache Superset<br/>(separates Repo/Docker-Setup,<br/>eigener Ordner Superset-Dashboard/)"]
 
     subgraph DOCKER["Docker-Container (eigenes Image: apache/airflow + pandas/pyarrow + google-cloud-*)"]
         SCHED["Scheduler<br/>(führt Tasks aus, LocalExecutor)"]
@@ -64,6 +65,7 @@ flowchart TD
 | **GCS-Bucket** (`lakehouse-retail-pipeline-raw-hh`) | Objektspeicher in der Cloud — nimmt Rohdaten (`raw/`) und Gold-Daten (`gold/`) als Parquet/CSV entgegen | wird von `GCPStorage.upload_to_gcs()` beschrieben, von BigQuery als Quelle gelesen |
 | **BigQuery** (Dataset `retail_lakehouse`) | SQL-basiertes Data Warehouse, GCP-Pendant zu Databricks/Delta Lake — Zielort für `transaktion_data` als abfragbare Tabelle | wird von `GCPBigQuery.load_to_bigquery()` per Load-Job aus GCS befüllt |
 | **Service Account `pipeline-runner`** | Technische, nicht-persönliche GCP-Identität mit den Rollen `storage.objectAdmin`, `bigquery.dataEditor`, `bigquery.jobUser` — authentifiziert Container-Code bei GCP, ganz ohne Browser-Login | Key liegt außerhalb des Repos (`~/.gcp-keys/`), read-only in den Airflow-Container gemountet |
+| **Apache Superset** | Open-Source-BI-Dashboard (Power-BI-Äquivalent), Reporting-Layer über den Gold-Daten in BigQuery | eigenständiges Docker-Setup in **separatem Ordner außerhalb dieses Repos** (`../Superset-Dashboard/`), da es kein eigener Projekt-Code ist, sondern ein extern bezogenes Tool — verbindet sich per SQL/SQLAlchemy mit BigQuery |
 
 ## 3. Der Datenfluss im Detail (die 5 Airflow-Tasks)
 
@@ -77,7 +79,7 @@ flowchart TD
 
 ## 4. Erledigt vs. noch geplant
 
-**Bereits gebaut** (siehe Diagramm oben): GCS-Bucket, BigQuery-Dataset, Service-Account-Auth, `gcp_sync_task` in der DAG — die Gold-Daten landen bei jedem DAG-Run automatisch auch in BigQuery.
+**Bereits gebaut** (siehe Diagramm oben): GCS-Bucket, BigQuery-Dataset, Service-Account-Auth, `gcp_sync_task` in der DAG — die Gold-Daten landen bei jedem DAG-Run automatisch auch in BigQuery. Apache Superset läuft (separates Docker-Setup in `../Superset-Dashboard/`), die BigQuery-Verbindung/das eigentliche Dashboard darin ist der nächste Schritt.
 
 **Noch offen:**
 
@@ -88,10 +90,10 @@ flowchart LR
     COMPOSER -->|"liest DAGs aus"| GCS_DAGS[("GCS-Bucket<br/>gs://.../dags/")]
     GITHUB2[("GitHub Actions")] -.->|"CD: gcloud composer ... import"| GCS_DAGS
 
-    BQ2[("BigQuery<br/>(bereits befüllt)")] -.-> DASH["Power BI / Streamlit<br/>Dashboard"]
+    BQ2[("BigQuery<br/>(bereits befüllt)")] -.-> DASH["Apache Superset<br/>(läuft, Verbindung fehlt noch)"]
 ```
 
 - **Cloud Composer** — GCP-gehostetes Airflow; würde das lokale Docker-Setup für eine "echte" Cloud-Umgebung ablösen. Bewusst noch nicht umgesetzt — verursacht laufende Kosten (siehe Kostenabschnitt aus dem Chat), daher eher kurz für eine Demo geplant als dauerhaft betrieben
 - **CD via GitHub Actions** — nach erfolgreichem CI-Lauf automatisch die DAG-Datei in den Composer-GCS-Bucket kopieren (`gcloud composer environments storage dags import`) — ergibt erst Sinn, sobald Composer existiert
-- **Dashboard** (Power BI/Streamlit) — noch nicht begonnen; BigQuery ist als Datenquelle dafür aber bereits einsatzbereit
+- **Superset ↔ BigQuery-Verbindung + eigentliches Dashboard** — Superset-Container laufen bereits, die Datenquelle muss noch eingerichtet und ein Dashboard darauf gebaut werden
 - **`src/governance/`** — leerer Stub für Unity-Catalog-artige Governance, niedrigste Priorität
