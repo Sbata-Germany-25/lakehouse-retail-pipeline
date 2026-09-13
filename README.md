@@ -10,7 +10,7 @@ Bronze/Silver/Gold-Lakehouse-Muster:
 - **Silver** (`data_lake/silver/`) — bereinigte Einzeltabellen (z.B. `discount_percent` als float statt String)
 - **Gold** (`data_lake/gold/`) — `transaktion_data.parquet`, denormalisierte Tabelle auf Item-Ebene für Reporting
 
-Orchestriert über Apache Airflow (lokal, Docker, `LocalExecutor`) — inkl. eines Tasks, der Gold-Daten automatisch nach GCS + BigQuery synct. Details siehe [docs/architecture.md](docs/architecture.md). Geplant: Cloud Composer + CD.
+Orchestriert über Apache Airflow (lokal, Docker, `LocalExecutor`) — inkl. eines Tasks, der Gold-Daten automatisch nach GCS + BigQuery synct. Details siehe [docs/architecture.md](docs/architecture.md).
 
 ## Setup
 
@@ -64,4 +64,3 @@ Das Dashboard ist mit Apache Superset gebaut (läuft lokal in Docker, separat vo
 - [x] Tests + CI/CD (GitHub Actions)
 - [x] GCP-Integration (GCS, BigQuery) — in die DAG eingebunden
 - [x] Dashboard (Apache Superset)
-- [ ] Cloud Composer + CD (DAG-Deployment)
