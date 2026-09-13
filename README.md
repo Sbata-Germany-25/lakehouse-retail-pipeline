@@ -10,7 +10,7 @@ Bronze/Silver/Gold-Lakehouse-Muster:
 - **Silver** (`data_lake/silver/`) — bereinigte Einzeltabellen (z.B. `discount_percent` als float statt String)
 - **Gold** (`data_lake/gold/`) — `transaktion_data.parquet`, denormalisierte Tabelle auf Item-Ebene für Reporting
 
-Orchestriert über Apache Airflow (lokal, Docker, `LocalExecutor`) — inkl. eines Tasks, der Gold-Daten automatisch nach GCS + BigQuery synct. Details siehe [docs/architecture.md](docs/architecture.md). Geplant: Cloud Composer + CD, Dashboard (Power BI/Streamlit).
+Orchestriert über Apache Airflow (lokal, Docker, `LocalExecutor`) — inkl. eines Tasks, der Gold-Daten automatisch nach GCS + BigQuery synct. Details siehe [docs/architecture.md](docs/architecture.md). Geplant: Cloud Composer + CD.
 
 ## Setup
 
@@ -51,10 +51,10 @@ src/
 dags/             # Airflow-DAGs
 notebooks/        # explorative Analyse (EDA)
 tests/            # Pytest für Transform-Logik
-dashboards/       # (leer) Dashboard-Layer läuft separat, siehe unten
+dashboards/       # Superset-Dashboard-Export (Dashboard, Charts, Dataset-Metadaten)
 ```
 
-Das Dashboard (Apache Superset) liegt bewusst **außerhalb** dieses Repos, in einem eigenen Ordner `Superset-Dashboard/` — es ist extern bezogener Tool-Code, kein eigener Projekt-Code (siehe [docs/architecture.md](docs/architecture.md)).
+Das Dashboard ist mit Apache Superset gebaut (läuft lokal in Docker, separat vom Pipeline-Code) und nutzt die Gold-Daten aus `data_lake/gold/transaktion_data.parquet` über MySQL. Der Export (Dashboard-Layout, Charts, Dataset-Referenz) liegt in [`dashboards/superset_export/`](dashboards/superset_export/), siehe [dashboards/README.md](dashboards/README.md) zum Re-Import.
 
 ## Status
 
@@ -63,5 +63,5 @@ Das Dashboard (Apache Superset) liegt bewusst **außerhalb** dieses Repos, in ei
 - [x] Airflow-DAG für die Pipeline (5 Tasks, inkl. GCP-Sync)
 - [x] Tests + CI/CD (GitHub Actions)
 - [x] GCP-Integration (GCS, BigQuery) — in die DAG eingebunden
+- [x] Dashboard (Apache Superset)
 - [ ] Cloud Composer + CD (DAG-Deployment)
-- [ ] Dashboard (Power BI/Streamlit)
