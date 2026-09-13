@@ -1,0 +1,174 @@
+slice_name: Net Sales & Volume Development
+description: null
+certified_by: null
+certification_details: null
+viz_type: mixed_timeseries
+params:
+  datasource: 22__table
+  viz_type: mixed_timeseries
+  slice_id: 105
+  matrixify_enable: false
+  matrixify_mode_columns: disabled
+  matrixify_dimension_selection_mode_columns: members
+  matrixify_dimension_columns:
+    dimension: ''
+    values: []
+  matrixify_topn_value_columns: 10
+  matrixify_all_sort_by_columns: a_to_z
+  matrixify_topn_order_columns: true
+  matrixify_show_column_headers: true
+  matrixify_fit_columns_dynamically: true
+  matrixify_mode_rows: disabled
+  matrixify_dimension_selection_mode_rows: members
+  matrixify_dimension_rows:
+    dimension: ''
+    values: []
+  matrixify_topn_value_rows: 10
+  matrixify_all_sort_by_rows: a_to_z
+  matrixify_topn_order_rows: true
+  matrixify_show_row_labels: true
+  matrixify_row_height: 300
+  matrixify_charts_per_row: 4
+  matrixify_cell_title_template: ''
+  x_axis: sale_date
+  time_grain_sqla: P1W
+  metrics:
+  - expressionType: SQL
+    sqlExpression: SUM(item_total)
+    column: null
+    aggregate: null
+    datasourceWarning: false
+    hasCustomLabel: true
+    label: Net Sales
+    optionName: metric_6baqdgfjw3k_baafz38xbe
+  groupby: []
+  adhoc_filters:
+  - expressionType: SQL
+    sqlExpression: Week(DATE(sale_date))
+    clause: WHERE
+    subject: sale_date
+    operator: TEMPORAL_RANGE
+    comparator: null
+    isExtra: false
+    isNew: false
+    datasourceWarning: false
+    filterOptionName: filter_mnyhtwz81u_nj5hmcnxgqf
+  order_desc: false
+  row_limit: 10000
+  truncate_metric: false
+  comparison_type: values
+  metrics_b:
+  - expressionType: SIMPLE
+    column:
+      advanced_data_type: null
+      certification_details: null
+      certified_by: null
+      column_name: quantity
+      description: null
+      expression: null
+      filterable: true
+      groupby: true
+      id: 714
+      is_certified: false
+      is_dttm: false
+      python_date_format: null
+      type: BIGINT
+      type_generic: 0
+      uuid: 804a6a97-48e7-4605-844b-cc791def2a34
+      verbose_name: null
+      warning_markdown: null
+    aggregate: SUM
+    sqlExpression: null
+    datasourceWarning: false
+    hasCustomLabel: true
+    label: Quantity
+    optionName: metric_5cldl6sg7p_t908sz5g3h
+  groupby_b: []
+  adhoc_filters_b:
+  - expressionType: SIMPLE
+    subject: signup_date
+    operator: TEMPORAL_RANGE
+    comparator: No filter
+    clause: WHERE
+    sqlExpression: null
+    isExtra: false
+    isNew: false
+    datasourceWarning: false
+    filterOptionName: filter_5x5zjzi4kf2_f8mbwebirx
+  order_desc_b: false
+  row_limit_b: 10000
+  truncate_metric_b: false
+  comparison_type_b: values
+  annotation_layers: []
+  x_axis_title: ''
+  x_axis_title_margin: 0
+  y_axis_title: ''
+  y_axis_title_margin: 15
+  y_axis_title_position: Left
+  color_scheme: supersetAndPresetColors
+  time_shift_color: true
+  seriesType: bar
+  stack: false
+  area: false
+  show_value: false
+  only_total: true
+  opacity: 0.2
+  markerEnabled: false
+  markerSize: 12
+  yAxisIndex: 0
+  sort_series_type: sum
+  sort_series_ascending: false
+  seriesTypeB: bar
+  stackB: false
+  areaB: false
+  only_totalB: true
+  opacityB: 0.2
+  markerEnabledB: false
+  markerSizeB: 6
+  yAxisIndexB: 1
+  sort_series_typeB: sum
+  sort_series_ascendingB: false
+  zoomable: false
+  minorTicks: false
+  show_legend: true
+  legendType: plain
+  legendOrientation: top
+  legendMargin: ''
+  x_axis_time_format: smart_date
+  xAxisLabelRotation: 0
+  xAxisLabelInterval: auto
+  force_max_interval: false
+  show_query_identifiers: false
+  rich_tooltip: true
+  showTooltipTotal: true
+  showTooltipPercentage: false
+  tooltipSortByMetric: false
+  tooltipTimeFormat: smart_date
+  minorSplitLine: false
+  truncateXAxis: true
+  truncateYAxis: false
+  y_axis_bounds:
+  - null
+  - null
+  y_axis_format: SMART_NUMBER
+  logAxis: false
+  y_axis_bounds_secondary:
+  - null
+  - null
+  y_axis_format_secondary: SMART_NUMBER
+  yAxisTitleSecondary: ''
+  logAxisSecondary: false
+  echart_options: '{}'
+  extra_form_data: {}
+  dashboards:
+  - 13
+query_context: '{"datasource":{"id":22,"type":"table"},"force":false,"queries":[{"filters":[],"extras":{"time_grain_sqla":"P1W","having":"","where":"(Week(DATE(sale_date)))"},"applied_time_extras":{},"columns":[{"timeGrain":"P1W","columnType":"BASE_AXIS","sqlExpression":"sale_date","label":"sale_date","expressionType":"SQL","isColumnReference":true}],"metrics":[{"expressionType":"SQL","sqlExpression":"SUM(item_total)","column":null,"aggregate":null,"datasourceWarning":false,"hasCustomLabel":true,"label":"Net
+  Sales","optionName":"metric_6baqdgfjw3k_baafz38xbe"}],"annotation_layers":[],"row_limit":10000,"series_columns":[],"series_limit":0,"group_others_when_limit_reached":false,"url_params":{},"custom_params":{},"custom_form_data":{},"time_offsets":[],"post_processing":[{"operation":"pivot","options":{"index":["sale_date"],"columns":[],"aggregates":{"Net
+  Sales":{"operator":"mean"}},"drop_missing_columns":true}},{"operation":"flatten"}],"orderby":[[{"expressionType":"SQL","sqlExpression":"SUM(item_total)","column":null,"aggregate":null,"datasourceWarning":false,"hasCustomLabel":true,"label":"Net
+  Sales","optionName":"metric_6baqdgfjw3k_baafz38xbe"},true]]},{"filters":[{"col":"signup_date","op":"TEMPORAL_RANGE","val":"No
+  filter"}],"extras":{"time_grain_sqla":"P1W","having":"","where":""},"applied_time_extras":{},"columns":[{"timeGrain":"P1W","columnType":"BASE_AXIS","sqlExpression":"sale_date","label":"sale_date","expressionType":"SQL","isColumnReference":true}],"metrics":[{"expressionType":"SIMPLE","column":{"advanced_data_type":null,"certification_details":null,"certified_by":null,"column_name":"quantity","description":null,"expression":null,"filterable":true,"groupby":true,"id":714,"is_certified":false,"is_dttm":false,"python_date_format":null,"type":"BIGINT","type_generic":0,"uuid":"804a6a97-48e7-4605-844b-cc791def2a34","verbose_name":null,"warning_markdown":null},"aggregate":"SUM","sqlExpression":null,"datasourceWarning":false,"hasCustomLabel":true,"label":"Quantity","optionName":"metric_5cldl6sg7p_t908sz5g3h"}],"annotation_layers":[],"row_limit":10000,"series_columns":[],"series_limit":0,"group_others_when_limit_reached":false,"url_params":{},"custom_params":{},"custom_form_data":{},"time_offsets":[],"post_processing":[{"operation":"pivot","options":{"index":["sale_date"],"columns":[],"aggregates":{"Quantity":{"operator":"mean"}},"drop_missing_columns":true}},{"operation":"flatten"}],"orderby":[[{"expressionType":"SIMPLE","column":{"advanced_data_type":null,"certification_details":null,"certified_by":null,"column_name":"quantity","description":null,"expression":null,"filterable":true,"groupby":true,"id":714,"is_certified":false,"is_dttm":false,"python_date_format":null,"type":"BIGINT","type_generic":0,"uuid":"804a6a97-48e7-4605-844b-cc791def2a34","verbose_name":null,"warning_markdown":null},"aggregate":"SUM","sqlExpression":null,"datasourceWarning":false,"hasCustomLabel":true,"label":"Quantity","optionName":"metric_5cldl6sg7p_t908sz5g3h"},true]]}],"form_data":{"datasource":"22__table","viz_type":"mixed_timeseries","slice_id":105,"matrixify_enable":false,"matrixify_mode_columns":"disabled","matrixify_dimension_selection_mode_columns":"members","matrixify_dimension_columns":{"dimension":"","values":[]},"matrixify_topn_value_columns":10,"matrixify_all_sort_by_columns":"a_to_z","matrixify_topn_order_columns":true,"matrixify_show_column_headers":true,"matrixify_fit_columns_dynamically":true,"matrixify_mode_rows":"disabled","matrixify_dimension_selection_mode_rows":"members","matrixify_dimension_rows":{"dimension":"","values":[]},"matrixify_topn_value_rows":10,"matrixify_all_sort_by_rows":"a_to_z","matrixify_topn_order_rows":true,"matrixify_show_row_labels":true,"matrixify_row_height":300,"matrixify_charts_per_row":4,"matrixify_cell_title_template":"","x_axis":"sale_date","time_grain_sqla":"P1W","metrics":[{"expressionType":"SQL","sqlExpression":"SUM(item_total)","column":null,"aggregate":null,"datasourceWarning":false,"hasCustomLabel":true,"label":"Net
+  Sales","optionName":"metric_6baqdgfjw3k_baafz38xbe"}],"groupby":[],"adhoc_filters":[{"expressionType":"SQL","sqlExpression":"Week(DATE(sale_date))","clause":"WHERE","subject":"sale_date","operator":"TEMPORAL_RANGE","comparator":null,"isExtra":false,"isNew":false,"datasourceWarning":false,"filterOptionName":"filter_mnyhtwz81u_nj5hmcnxgqf"}],"order_desc":false,"row_limit":10000,"truncate_metric":false,"comparison_type":"values","annotation_layers":[],"x_axis_title":"","x_axis_title_margin":0,"y_axis_title":"","y_axis_title_margin":15,"y_axis_title_position":"Left","color_scheme":"supersetAndPresetColors","time_shift_color":true,"seriesType":"bar","stack":false,"area":false,"show_value":false,"only_total":true,"opacity":0.2,"markerEnabled":false,"markerSize":12,"yAxisIndex":0,"sort_series_type":"sum","sort_series_ascending":false,"seriesTypeB":"bar","stackB":false,"areaB":false,"only_totalB":true,"opacityB":0.2,"markerEnabledB":false,"markerSizeB":6,"yAxisIndexB":1,"sort_series_typeB":"sum","sort_series_ascendingB":false,"zoomable":false,"minorTicks":false,"show_legend":true,"legendType":"plain","legendOrientation":"top","legendMargin":"","x_axis_time_format":"smart_date","xAxisLabelRotation":0,"xAxisLabelInterval":"auto","force_max_interval":false,"show_query_identifiers":false,"rich_tooltip":true,"showTooltipTotal":true,"showTooltipPercentage":false,"tooltipSortByMetric":false,"tooltipTimeFormat":"smart_date","minorSplitLine":false,"truncateXAxis":true,"truncateYAxis":false,"y_axis_bounds":[null,null],"y_axis_format":"SMART_NUMBER","logAxis":false,"y_axis_bounds_secondary":[null,null],"y_axis_format_secondary":"SMART_NUMBER","yAxisTitleSecondary":"","logAxisSecondary":false,"echart_options":"{}","extra_form_data":{},"dashboards":[13],"force":false,"result_format":"json","result_type":"full"},"result_format":"json","result_type":"full"}'
+cache_timeout: null
+uuid: 0f45ed3f-5991-4cf8-b522-1e0bb348d04d
+version: 1.0.0
+dataset_uuid: 5034b76b-84c7-4657-8c56-48b17c50b060

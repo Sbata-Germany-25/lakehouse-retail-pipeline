@@ -1,0 +1,15 @@
+database_name: MySQL
+sqlalchemy_uri: mysql+mysqldb://hicham:XXXXXXXXXX@host.docker.internal:3306/gold
+cache_timeout: null
+expose_in_sqllab: true
+allow_run_async: false
+allow_ctas: false
+allow_cvas: false
+allow_dml: false
+allow_file_upload: false
+extra:
+  allows_virtual_table_explore: true
+impersonate_user: false
+configuration_method: dynamic_form
+uuid: 02e3035d-94fa-40e3-99e1-6e8201915f6a
+version: 1.0.0
